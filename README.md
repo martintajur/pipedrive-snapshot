@@ -13,10 +13,10 @@ This repository contains two scripts:
 ### Download.js
 
 ```
-node download.js [apitoken] > backup.json
+node download.js [apitoken] [filename]
 ```
 
-Downloads the contents from a Pipderive account using the supplied API token into backup.json file.
+Downloads the contents from a Pipderive account using the supplied API token into a file.
 
 ### Upload.js
 
