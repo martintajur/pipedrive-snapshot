@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 Pipedrive snapshot downloader & uploader
 ========================================
 
@@ -26,10 +25,3 @@ node upload.js [apitoken] [filename]
 ```
 
 Uploads the contents of a previously archived data from the given file (e.g. backup.json) to a Pipedrive account using the supplied API token.
-
-=======
-pipedrive-snapshot
-==================
-
-Pipedrive account archiver/uploader
->>>>>>> 5bd47500b9b2f76eb25e8bee491142b4de2cc614
