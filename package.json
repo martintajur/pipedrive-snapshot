@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "lodash": "^2.4.1",
-    "pipedrive": "git://github.com/user/repo.git#strict_mode",
+    "pipedrive": "git://github.com/pipedrive/client-nodejs.git#strict_mode",
     "underscore.inflections": "^0.2.1"
   }
 }
