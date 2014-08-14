@@ -1,4 +1,4 @@
-var Pipedrive = require('../client-nodejs/index.js'),
+var Pipedrive = require('pipedrive'),
 	apiToken = process.argv[2],
 	targetFile = process.argv[3],
 	_ = require('lodash');
