@@ -1,7 +1,8 @@
 var Pipedrive = require('pipedrive'),
 	apiToken = process.argv[2],
 	sourceFile = process.argv[3],
-	_ = require('lodash');
+	_ = require('lodash'),
+	transform = require('./lib/transform-upload.js');
 
 if (!apiToken) {
 	console.error('Error: no API token supplied.');
@@ -25,5 +26,14 @@ _.mixin(require('./lib/mixins.js'));
 _.mixin(require('underscore.inflections'));
 
 _.each(objectConfig.objects, function(object) {
-	console.log(_.capitalize(object) + ' will be uploaded here.');
+	_.each(_.values(data[object].data), function(item) {
+		var itemData = transform(object, item);
+
+		if (itemData !== false) {
+			pipedrive[_.capitalize(object)].add(itemData, function(err, createdItem) {
+				if (err) throw err;
+				console.log(_.singularize(_.capitalize(object)) + ' ' + createdItem.id + ' created');
+			});
+		}
+	});
 })
