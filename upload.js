@@ -15,5 +15,6 @@ if (!sourceFile) {
 	process.exit(2);
 }
 
-var data = require(sourceFile);
+var data = require('./' + sourceFile);
 
+console.log('Work in progress!');
