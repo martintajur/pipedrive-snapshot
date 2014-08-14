@@ -17,4 +17,13 @@ if (!sourceFile) {
 
 var data = require('./' + sourceFile);
 
-console.log('Work in progress!');
+var objectConfig = require('./lib/objects.json');
+
+var pipedrive = new Pipedrive.Client(apiToken, true);
+
+_.mixin(require('./lib/mixins.js'));
+_.mixin(require('underscore.inflections'));
+
+_.each(objectConfig.objects, function(object) {
+	console.log(_.capitalize(object) + ' will be uploaded here.');
+})

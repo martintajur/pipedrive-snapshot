@@ -1,62 +1,25 @@
 var Pipedrive = require('pipedrive'),
 	apiToken = process.argv[2],
 	targetFile = process.argv[3],
-	_ = require('lodash');
+	_ = require('lodash'),
+	objectConfig = require('./lib/objects.json');
 
 if (!apiToken) {
-	console.error('Error: no API token supplied.');
-	console.log('Usage: download.js [apitoken] [file]');
+	console.error('Error: no API token supplied. Usage: download.js [apitoken] [file]');
 	process.exit(1);
 }
 
 if (!targetFile) {
-	console.error('Error: no output file name specified.');
-	console.log('Usage: download.js [apitoken] [file]');
+	console.error('Error: no output file name specified. Usage: download.js [apitoken] [file]');
 	process.exit(2);
 }
 
-var pipedrive = new Pipedrive.Client(apiToken, true),
-	objects = [
-		'deals',
-		'persons',
-		'organizations',
-		'notes',
-		'activities',
-		'products',
-		'dealFields',
-		'personFields',
-		'productFields',
-		'organizationFields',
-		'pipelines',
-		'stages',
-		'users',
-		'activityTypes',
-		'currencies',
-		'emailThreads',
-		'filters',
-		'permissionSets',
-		'goals',
-		'pushNotifications',
-		'roles',
-		'companySettings',
-		'companyFeatures'
-	],
-	// subObjects = {},
-	subObjects = {
-		deals: ['products','followers'],
-		persons: ['followers'],
-		organizations: ['followers']
-	},
-	detailedObjects = ['filters'];
+var pipedrive = new Pipedrive.Client(apiToken, true);
 
 _.mixin(require('./lib/mixins.js'));
 _.mixin(require('underscore.inflections'));
 
-var downloadedData = {
-		_meta: {
-			start_time: new Date().toISOString()
-		}
-	},
+var downloadedData = { _meta: { start_time: new Date().toISOString() } },
 	completedItems = {};
 
 var writeFile = function() {
@@ -71,7 +34,8 @@ process.on('SIGINT', writeFile);
 process.on('SIGTERM', writeFile);
 process.on('SIGHUP', writeFile);
 
-_.each(objects, function(object) {
+// fetch all object of each object type
+_.each(objectConfig.objects, function(object) {
 	var start = 0,
 		pageSize = 250,
 		perObjectTypeLimit = -1;
@@ -93,7 +57,7 @@ _.each(objects, function(object) {
 			console.log('All ' + object + ' downloaded. '+downloadedData[object].total+' in total.');
 
 			// all items of all kinds are downloaded:
-			if (_.keys(completedItems).length === objects.length) {
+			if (_.keys(completedItems).length === objectConfig.objects.length) {
 				writeFile();
 			}
 		}
@@ -120,10 +84,10 @@ _.each(objects, function(object) {
 				downloadedData[object].total++;
 
 				// check if for any object of this kind, additional sub-objects should be fetched:
-				if (typeof subObjects[object] !== 'undefined') {
+				if (typeof objectConfig.subObjects[object] !== 'undefined') {
 					downloadedData[object].subitems = downloadedData[object].subitems || {};
 
-					_.each(subObjects[object], function(subobject) {
+					_.each(objectConfig.subObjects[object], function(subobject) {
 						subitemsToFetch++;
 						downloadedData[object].subitems[item.id] = downloadedData[object].subitems[item.id] || {};
 						item['get' + _.capitalize(subobject)](function(subErr, subData, subAdditionalData) {
@@ -140,7 +104,7 @@ _.each(objects, function(object) {
 				}
 
 				// check if for any object of this kind, detailed data must be fetched via GET /v1/[objectType]/[id]
-				if (detailedObjects.indexOf(object) > -1) {
+				if (objectConfig.detailedObjects.indexOf(object) > -1) {
 					detailedItemsToFetch++;
 					pipedrive[_.capitalize(object)].get(item.id, function(detailedErr, detailedItem) {
 						if (detailedErr) throw detailedErr;
@@ -155,11 +119,11 @@ _.each(objects, function(object) {
 				}
 			});
 
-			if (typeof subObjects[object] === 'undefined' && detailedObjects.indexOf(object) === -1) {
+			if (typeof objectConfig.subObjects[object] === 'undefined' && objectConfig.detailedObjects.indexOf(object) === -1) {
 				nextPage(data, additionalData);
 			}
 		});
 	}
 
 	fetchPage();
-})
+});

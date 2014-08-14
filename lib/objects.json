@@ -1,0 +1,33 @@
+{
+	"objects": [
+		"deals",
+		"persons",
+		"organizations",
+		"notes",
+		"activities",
+		"products",
+		"dealFields",
+		"personFields",
+		"productFields",
+		"organizationFields",
+		"pipelines",
+		"stages",
+		"users",
+		"activityTypes",
+		"currencies",
+		"emailThreads",
+		"filters",
+		"permissionSets",
+		"goals",
+		"pushNotifications",
+		"roles",
+		"companySettings",
+		"companyFeatures"
+	],
+	"subObjects": {
+		"deals": ["products","followers"],
+		"persons": ["followers"],
+		"organizations": ["followers"]
+	},
+	"detailedObjects": ["filters"]
+}
