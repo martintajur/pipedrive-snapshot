@@ -16,30 +16,74 @@ if (!targetFile) {
 }
 
 var pipedrive = new Pipedrive.Client(apiToken, true),
-	objects = ['deals','persons','organizations','notes','activities','products','dealFields','personFields','productFields','organizationFields','pipelines','stages','users','activityTypes','currencies','emailThreads','filters','permissionSets','goals','pushNotifications','roles','companySettings','companyFeatures'],
+	objects = [
+		'deals',
+		'persons',
+		'organizations',
+		'notes',
+		'activities',
+		'products',
+		'dealFields',
+		'personFields',
+		'productFields',
+		'organizationFields',
+		'pipelines',
+		'stages',
+		'users',
+		'activityTypes',
+		'currencies',
+		'emailThreads',
+		'filters',
+		'permissionSets',
+		'goals',
+		'pushNotifications',
+		'roles',
+		'companySettings',
+		'companyFeatures'
+	],
+	// subObjects = {},
 	subObjects = {
-		deals: ['products','followers']
+		deals: ['products','followers'],
+		persons: ['followers'],
+		organizations: ['followers']
 	},
 	detailedObjects = ['filters'];
 
 _.mixin(require('./lib/mixins.js'));
 _.mixin(require('underscore.inflections'));
 
-var downloadedData = {},
+var downloadedData = {
+		_meta: {
+			start_time: new Date().toISOString()
+		}
+	},
 	completedItems = {};
+
+var writeFile = function() {
+	var fs = require('fs');
+	downloadedData._meta.end_time = new Date().toISOString();
+	fs.writeFileSync(targetFile, JSON.stringify(downloadedData, null, 2));
+	console.log('Success! '+targetFile+' written');
+	process.exit(0);
+}
+
+process.on('SIGINT', writeFile);
+process.on('SIGTERM', writeFile);
+process.on('SIGHUP', writeFile);
 
 _.each(objects, function(object) {
 	var start = 0,
-		perObjectTypeLimit = 500;
+		pageSize = 250,
+		perObjectTypeLimit = -1;
 
-	downloadedData[object] = { total: 0, data: [] };
+	downloadedData[object] = { total: 0, data: {} };
 
 	var fetchPage = function() {
 		var nextPage = function(data, additionalData) {
 			// more items to download:
-			if (additionalData && additionalData.pagination && additionalData.pagination.more_items_in_collection === true && downloadedData[object].total < perObjectTypeLimit) {
+			if (additionalData && additionalData.pagination && additionalData.pagination.next_start && additionalData.pagination.more_items_in_collection === true && (perObjectTypeLimit == -1 || downloadedData[object].total < perObjectTypeLimit)) {
 				console.log('Downloading ' + object + ' ... ('+downloadedData[object].total+' downloaded)');
-				start = additionalData.next_start;
+				start = additionalData.pagination.next_start;
 				fetchPage();
 				return;
 			}
@@ -50,41 +94,68 @@ _.each(objects, function(object) {
 
 			// all items of all kinds are downloaded:
 			if (_.keys(completedItems).length === objects.length) {
-				var fs = require('fs');
-				fs.writeFileSync(targetFile, JSON.stringify(downloadedData, null, 2));
-				console.log('Success! '+targetFile+' written');
-				process.exit(0);
+				writeFile();
 			}
 		}
 
-		pipedrive[_.capitalize(object)].getAll({ start: start, limit: 250 }, function(err, data, additionalData) {
+		console.log('Fetching ' + object + ' from ' + start + ' to ' + (start+pageSize));
+		pipedrive[_.capitalize(object)].getAll({ start: start, limit: pageSize }, function(err, data, additionalData) {
+			if (err) throw err;
+
 			var subitemsToFetch = 0,
-				subitemsFetched = 0;
+				subitemsFetched = 0,
+				detailedItemsToFetch = 0,
+				detailedItemsFetched = 0,
+				nextPageCalled = false;
+
+			var checkNext = function(data, additionalData) {
+				if (!nextPageCalled && subitemsFetched === subitemsToFetch && detailedItemsToFetch == detailedItemsFetched) {
+					nextPageCalled = true;
+					nextPage(data, additionalData);
+				}
+			};
 
 			_.each(data, function(item) {
-				downloadedData[object].data.push(item.toObject());
+				downloadedData[object].data[item.id] = item.toObject();
 				downloadedData[object].total++;
 
+				// check if for any object of this kind, additional sub-objects should be fetched:
 				if (typeof subObjects[object] !== 'undefined') {
 					downloadedData[object].subitems = downloadedData[object].subitems || {};
 
 					_.each(subObjects[object], function(subobject) {
 						subitemsToFetch++;
-						downloadedData[object].subitems[subobject] = downloadedData[object].subitems[subobject] || {};
+						downloadedData[object].subitems[item.id] = downloadedData[object].subitems[item.id] || {};
 						item['get' + _.capitalize(subobject)](function(subErr, subData, subAdditionalData) {
-							downloadedData[object].subitems[subobject][item.id] = subData;
+							if (subErr) throw subErr;
+							if (!_.isEmpty(subData)) {
+								downloadedData[object].subitems[item.id][subobject] = subData;
+							}
 							subitemsFetched++;
 							console.log('All ' + subobject + ' of ' + _.singularize(object) + ' ' + item.id + ' downloaded. '+subData.length+' in total.');
 
-							if (subitemsFetched === subitemsToFetch) {
-								nextPage(data, additionalData);
-							}
+							checkNext(data, additionalData);
 						});
+					});
+				}
+
+				// check if for any object of this kind, detailed data must be fetched via GET /v1/[objectType]/[id]
+				if (detailedObjects.indexOf(object) > -1) {
+					detailedItemsToFetch++;
+					pipedrive[_.capitalize(object)].get(item.id, function(detailedErr, detailedItem) {
+						if (detailedErr) throw detailedErr;
+						if (!_.isEmpty(detailedItem)) {
+							downloadedData[object].data[item.id] = detailedItem.toObject();
+						}
+						detailedItemsFetched++;
+						console.log('Detailed ' + _.singularize(object) + ' ' + item.id + ' downloaded.');
+
+						checkNext(data, additionalData);
 					});
 				}
 			});
 
-			if (typeof subObjects[object] === 'undefined') {
+			if (typeof subObjects[object] === 'undefined' && detailedObjects.indexOf(object) === -1) {
 				nextPage(data, additionalData);
 			}
 		});
