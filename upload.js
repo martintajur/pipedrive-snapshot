@@ -31,7 +31,7 @@ _.each(objectConfig.objects, function(object) {
 
 		if (itemData !== false) {
 			pipedrive[_.capitalize(object)].add(itemData, function(err, createdItem) {
-				if (err) throw err;
+				if (err) throw new Error("Error: " + err.toString() + " " + JSON.stringify(itemData));
 				console.log(_.singularize(_.capitalize(object)) + ' ' + createdItem.id + ' created');
 			});
 		}
