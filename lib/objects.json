@@ -1,4 +1,5 @@
 {
+	"#": "Ordered list of objects, in the order of recreating them under new account",
 	"objects": [
 		"users",
 		"roles",
@@ -24,10 +25,14 @@
 		"goals",
 		"pushNotifications"
 	],
+
+	"#": "Related objects map",
 	"subObjects": {
 		"deals": ["products","followers"],
 		"persons": ["followers"],
 		"organizations": ["followers"]
 	},
+
+	"#": "List of objects that should be fetched one-by-one from the old account, using the single item API endpoint, to get the full data",
 	"detailedObjects": ["filters"]
 }
