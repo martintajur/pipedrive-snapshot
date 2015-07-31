@@ -1,6 +1,7 @@
 {
 	"#": "Ordered list of objects, in the order of recreating them under new account",
 	"objects": [
+		"companyFeatures",
 		"users",
 		"roles",
 		"permissionSets",
@@ -8,7 +9,6 @@
 		"stages",
 		"currencies",
 		"companySettings",
-		"companyFeatures",
 		"dealFields",
 		"personFields",
 		"productFields",

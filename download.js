@@ -79,7 +79,14 @@ _.each(objectConfig.objects, function(object) {
 
 		// fetch all items of kind, one page at a time:
 		pipedrive[_.capitalize(object)].getAll({ start: start, limit: pageSize }, function(err, data, additionalData) {
-			if (err) throw err;
+			if (err) {
+				if (err.toString().indexOf('You do not have permissions to do this')) {
+					console.log('Warning! ' + _.capitalize(object) + ' not downloaded due to insufficient permissions.');
+				}
+				else {
+					throw err;
+				}
+			}
 
 			var subitemsToFetch = 0,
 				subitemsFetched = 0,
