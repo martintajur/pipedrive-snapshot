@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "lodash": "^2.4.1",
-    "pipedrive": "2.0.0",
+    "pipedrive": "2.0.4",
     "underscore.inflections": "^0.2.1"
   }
 }
