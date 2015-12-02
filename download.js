@@ -6,6 +6,9 @@
 var Pipedrive = require('pipedrive'),
 	apiToken = process.argv[2],
 	targetFile = process.argv[3],
+	globalDownloadLimit = process.env.GLOBAL_ITEM_LIMIT || -1,
+	globalDownloadStart = process.env.GLOBAL_ITEM_START || 0,
+	globalDownloadCount = 0,
 	_ = require('lodash'),
 	objectConfig = require('./lib/objects.json');
 
@@ -46,7 +49,7 @@ process.on('SIGHUP', writeFile);
 
 // fetch all object of each object type
 _.each(objectConfig.objects, function(object) {
-	var start = 0,
+	var start = globalDownloadStart,
 		pageSize = 250,
 		perObjectTypeLimit = -1;
 
@@ -58,7 +61,7 @@ _.each(objectConfig.objects, function(object) {
 		var nextPage = function(data, additionalData) {
 
 			// in case there are more items to download of this kind:
-			if (additionalData && additionalData.pagination && additionalData.pagination.next_start && additionalData.pagination.more_items_in_collection === true && (perObjectTypeLimit == -1 || downloadedData[object].total < perObjectTypeLimit)) {
+			if ((globalDownloadLimit === -1 || globalDownloadCount <= globalDownloadLimit) && additionalData && additionalData.pagination && additionalData.pagination.next_start && additionalData.pagination.more_items_in_collection === true && (perObjectTypeLimit == -1 || downloadedData[object].total < perObjectTypeLimit)) {
 				console.log('Downloading ' + object + ' ... ('+downloadedData[object].total+' downloaded)');
 				start = additionalData.pagination.next_start;
 				fetchPage();
@@ -106,6 +109,7 @@ _.each(objectConfig.objects, function(object) {
 			_.each(data, function(item) {
 				downloadedData[object].data[item.id] = item.toObject();
 				downloadedData[object].total++;
+				globalDownloadCount++;
 
 				// check if for any object of this kind, additional sub-objects should be fetched:
 				if (typeof objectConfig.subObjects[object] !== 'undefined') {

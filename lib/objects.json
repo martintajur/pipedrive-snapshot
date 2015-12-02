@@ -1,39 +1,14 @@
 {
 	"#": "Ordered list of objects, in the order of recreating them under new account",
 	"objects": [
-		"companyFeatures",
-		"users",
-		"roles",
-		"permissionSets",
-		"pipelines",
-		"stages",
-		"currencies",
-		"companySettings",
-		"dealFields",
-		"personFields",
-		"productFields",
-		"organizationFields",
-		"activityTypes",
-		"products",
-		"organizations",
-		"persons",
-		"deals",
-		"notes",
-		"activities",
-		"emailThreads",
-		"filters",
-		"goals",
-		"pushNotifications"
+		"emailThreads"
 	],
 
 	"#": "Related objects map",
 	"subObjects": {
-		"deals": ["products","followers"],
-		"persons": ["followers"],
-		"organizations": ["followers"],
 		"emailThreads": ["messages"]
 	},
 
 	"#": "List of objects that should be fetched one-by-one from the old account, using the single item API endpoint, to get the full data",
-	"detailedObjects": ["filters"]
+	"detailedObjects": []
 }
