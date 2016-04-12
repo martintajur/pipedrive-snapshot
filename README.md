@@ -24,4 +24,4 @@ Downloads the contents from a Pipderive account using the supplied API token int
 node upload.js [apitoken] [filename]
 ```
 
-Uploads the contents of a previously archived data from the given file (e.g. backup.json) to a Pipedrive account using the supplied API token.
+Uploads the contents of a previously archived data from the given file (e.g. backup.json) to a Pipedrive account using the supplied API token. **As of April 2016, uploader code is incomplete and does not work fully at all yet.**
