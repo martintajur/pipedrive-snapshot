@@ -10,7 +10,8 @@ This repository contains two scripts:
 
  * **upload.js** - uploads the contents of an archived Pipedrive account onto a new account
 ---
-### Note:
+## Important:
+
 Due to deprecated API endpoints, please make sure your `/lib/objects.json:23` and `node_modules/pipedrive/lib/Pipedrive.js:63`
 use `mailThreads` and not `emailThreads`!
 ---
